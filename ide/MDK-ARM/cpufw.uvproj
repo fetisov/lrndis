@@ -433,6 +433,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\project\SystemTime.c</FilePath>
             </File>
+            <File>
+              <FileName>resources.inc</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\project\resources.inc</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

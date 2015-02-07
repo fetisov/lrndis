@@ -46,7 +46,11 @@
 #include "http_req.h"
 #include "htserv.h"
 
-USB_OTG_CORE_HANDLE USB_OTG_dev; // usb device struct
+__ALIGN_BEGIN
+USB_OTG_CORE_HANDLE USB_OTG_dev
+__ALIGN_END;
+
+//USB_OTG_CORE_HANDLE USB_OTG_dev; // usb device struct
 
 static uint8_t hwaddr[6]  = {0x20,0x89,0x84,0x6A,0x96,00};
 static uint8_t ipaddr[4]  = {192, 168, 7, 1};
@@ -197,7 +201,8 @@ typedef struct my_page
 static const my_page_t my_pages[] =
 {
 	{ "/",          200, MIME_TEXT_HTML, page1_html,     page1_html_size      },
-	{ "/page2.htm", 200, MIME_TEXT_HTML, page1_html,     page1_html_size      },
+	{ "/page2.htm", 200, MIME_TEXT_HTML, page2_html,     page2_html_size      },
+	{ "/page3.htm", 200, MIME_TEXT_HTML, page3_html,     page3_html_size      },
 	{ "/check.gif", 200, MIME_IMAGE_GIF, check_png,      check_png_size       },
 	{ NULL,         404, MIME_TEXT_HTML, page_not_found, page_not_found_size  }
 };

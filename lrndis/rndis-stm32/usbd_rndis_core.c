@@ -27,14 +27,16 @@
 /*********************************************
    RNDIS Device library callbacks
  *********************************************/
-static uint8_t  usbd_rndis_init      (void *pdev, uint8_t cfgidx);
-static uint8_t  usbd_rndis_deinit    (void *pdev, uint8_t cfgidx);
-static uint8_t  usbd_rndis_setup     (void *pdev, USB_SETUP_REQ *req);
-static uint8_t  usbd_rndis_ep0_recv  (void *pdev);
-static uint8_t  usbd_rndis_data_in   (void *pdev, uint8_t epnum);
-static uint8_t  usbd_rndis_data_out  (void *pdev, uint8_t epnum);
-static uint8_t  usbd_rndis_sof       (void *pdev);
-static uint8_t *usbd_rndis_get_cfg   (uint8_t speed, uint16_t *length);
+static uint8_t  usbd_rndis_init          (void *pdev, uint8_t cfgidx);
+static uint8_t  usbd_rndis_deinit        (void *pdev, uint8_t cfgidx);
+static uint8_t  usbd_rndis_setup         (void *pdev, USB_SETUP_REQ *req);
+static uint8_t  usbd_rndis_ep0_recv      (void *pdev);
+static uint8_t  usbd_rndis_data_in       (void *pdev, uint8_t epnum);
+static uint8_t  usbd_rndis_data_out      (void *pdev, uint8_t epnum);
+static uint8_t  usbd_rndis_sof           (void *pdev);
+static uint8_t  rndis_iso_in_incomplete  (void *pdev);
+static uint8_t  rndis_iso_out_incomplete (void *pdev);
+static uint8_t *usbd_rndis_get_cfg       (uint8_t speed, uint16_t *length);
 
 /*********************************************
    RNDIS specific management functions
@@ -71,8 +73,8 @@ USBD_Class_cb_TypeDef usbd_rndis_cb =
   usbd_rndis_data_in,
   usbd_rndis_data_out,
   usbd_rndis_sof,
-  NULL,
-  NULL,
+	rndis_iso_in_incomplete,
+	rndis_iso_out_incomplete,
   usbd_rndis_get_cfg
 };
 
@@ -628,6 +630,17 @@ static uint8_t usbd_rndis_data_out(void *pdev, uint8_t epnum)
 static uint8_t usbd_rndis_sof(void *pdev)
 {
 	return usbd_cdc_transfer(pdev);
+}
+
+static uint8_t rndis_iso_in_incomplete(void *pdev)
+{
+	return usbd_cdc_transfer(pdev);
+}
+
+static uint8_t rndis_iso_out_incomplete(void *pdev)
+{
+	DCD_EP_PrepareRx(pdev, RNDIS_DATA_OUT_EP, (uint8_t*)usb_rx_buffer, RNDIS_DATA_OUT_SZ);
+	return USBD_OK;
 }
 
 static uint8_t *usbd_rndis_get_cfg(uint8_t speed, uint16_t *length)
