@@ -29,7 +29,6 @@
 #include "usbd_usr.h"
 #include "usbd_desc.h"
 #include "usb_conf.h"
-#include "SystemTime.h"
 #include "netif/etharp.h"
 #include "lwip/init.h"
 #include "lwip/netif.h"
@@ -45,6 +44,7 @@
 #include "lwip/tcp.h"
 #include "http_req.h"
 #include "htserv.h"
+#include "time.h"
 
 __ALIGN_BEGIN
 USB_OTG_CORE_HANDLE USB_OTG_dev
@@ -116,6 +116,8 @@ err_t output_fn(struct netif *netif, struct pbuf *p, ip_addr_t *ipaddr)
 err_t linkoutput_fn(struct netif *netif, struct pbuf *p)
 {
 	int i;
+	if (p->len > ETH_MTU)
+		return ERR_ARG;
 	for (i = 0; i < 500; i++)
 	{
 		if (rndis_can_send()) break;

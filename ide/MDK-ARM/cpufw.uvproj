@@ -429,14 +429,19 @@
               <FilePath>..\..\project\startup_stm32f4xx.s</FilePath>
             </File>
             <File>
-              <FileName>SystemTime.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\project\SystemTime.c</FilePath>
-            </File>
-            <File>
               <FileName>resources.inc</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\project\resources.inc</FilePath>
+            </File>
+            <File>
+              <FileName>time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\project\time.c</FilePath>
+            </File>
+            <File>
+              <FileName>time.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\project\time.h</FilePath>
             </File>
           </Files>
         </Group>

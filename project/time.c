@@ -20,7 +20,7 @@
  * version: 1.0 demo (7.02.2015)
  */
 
-#include "SystemTime.h"
+#include "time.h"
 
 volatile uint32_t sysTimeTicks;
 volatile uint32_t sysTimeDelayCounter;
