@@ -1,19 +1,25 @@
 /*
- * Copyright (C) 2015 by Sergey Fetisov <fsenok@gmail.com>
+ * The MIT License (MIT)
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of
- * the License or (at your option) version 3 or any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
+ * Copyright (c) 2015 by Sergey Fetisov <fsenok@gmail.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 /*
@@ -125,20 +131,27 @@ const char page2_html[] =
 	"<tr height=\"300\">\r\n"
 	"<td>\r\n"
 	"<pre>\r\n"
-	"Copyright (C) 2015 by Sergey Fetisov (fsenok@gmail.com)\r\n"
+	"The MIT License (MIT)\r\n"
 	"\r\n"
-	"This program is free software; you can redistribute it and/or\r\n"
-	"modify it under the terms of the GNU General Public License as\r\n"
-	"published by the Free Software Foundation; either version 2 of\r\n"
-	"the License or (at your option) version 3 or any later version.\r\n"
+	"Copyright (c) 2015 by Sergey Fetisov <fsenok@gmail.com>\r\n"
 	"\r\n"
-	"This program is distributed in the hope that it will be useful,\r\n"
-	"but WITHOUT ANY WARRANTY; without even the implied warranty of\r\n"
-	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\r\n"
-	"GNU General Public License for more details.\r\n"
+	"Permission is hereby granted, free of charge, to any person obtaining a copy\r\n"
+	"of this software and associated documentation files (the \"Software\"), to deal\r\n"
+	"in the Software without restriction, including without limitation the rights\r\n"
+	"to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\n"
+	"copies of the Software, and to permit persons to whom the Software is\r\n"
+	"furnished to do so, subject to the following conditions:\r\n"
 	"\r\n"
-	"You should have received a copy of the GNU General Public License\r\n"
-	"along with this program. If not, see <a href=\"http://www.gnu.org/licenses/\">licenses</a>\r\n"
+	"The above copyright notice and this permission notice shall be included in all\r\n"
+	"copies or substantial portions of the Software.\r\n"
+	"\r\n"
+	"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\n"
+	"IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\n"
+	"FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\n"
+	"AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\n"
+	"LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\n"
+	"OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\n"
+	"SOFTWARE.\r\n"
 	"</pre>\r\n"
 	"</td>\r\n"
 	"</tr>\r\n"
