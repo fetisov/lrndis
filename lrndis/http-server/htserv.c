@@ -111,7 +111,9 @@ void htcon_req_finished(htcon_priv_t *con)
 		else
 		{
 			con->state = CSP_WR_RESP;
-			con->writed += len;
+			con->wacksize = 0;
+			con->writed = len;
+			con->wsended = 0;
 		}
 	}
 	else
@@ -196,8 +198,8 @@ err_t htcon_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
 	con = (htcon_priv_t *)arg;
 	if (con == NULL) return ERR_OK;
 	con->wacksize += len;
-	if (con->state == CSP_ACTIVE)
-		con->htcon.writed += len;
+//	if (con->state == CSP_ACTIVE)
+//		con->htcon.writed += len;
 	return ERR_OK;
 }
 
