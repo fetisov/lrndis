@@ -301,7 +301,7 @@ void htserv_io(void) // state machine
 
 		// closing connection?
 		if (con->state == CSP_CLOSING)
-			if (tcp_close(con->pcb) == ERR_OK)
+			// if (tcp_close(con->pcb) == ERR_OK)
 			{
 				con->htcon.state = CON_CLOSED;
 				con->state = CSP_CLOSED;
