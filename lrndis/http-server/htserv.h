@@ -41,7 +41,7 @@
 // server configuration
 
 #define HTTP_SERVER_NAME    "lrndis" // http server name
-#define HTTP_SERVER_MAX_CON 2        // max connections number at one time
+#define HTTP_SERVER_MAX_CON 3        // max connections number at one time
 #define HTTP_CON_BUFF_SIZE  2048     // size of con buffer, used for request/response data storing
 #define HTTP_REQ_MAX_SIZE   1024     // max part of con buffer for a request storing
 #define HTTP_DEF_CONT_LANG  "en"     // content language which will be sent to client by default
