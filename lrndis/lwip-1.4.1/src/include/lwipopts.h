@@ -46,9 +46,13 @@
 #define LWIP_IP_ACCEPT_UDP_PORT(p)      ((p) == PP_NTOHS(67))
 
 #define MEM_SIZE                        10000
-#define TCP_MSS                         (1500 /*mtu*/ - 14 /*ethhdr*/ - 20 /*iphdr*/ - 20 /*tcphhr*/)
-//#define TCP_SND_BUF                     (2 * TCP_MSS)
+#define TCP_MSS                         (1500 /*mtu*/ - 20 /*iphdr*/ - 20 /*tcphhr*/)
+#define TCP_SND_BUF                     (2 * TCP_MSS)
 
 #define ETHARP_SUPPORT_STATIC_ENTRIES   1
+
+#define LWIP_HTTPD_CGI                  1
+#define LWIP_HTTPD_SSI                  1
+#define LWIP_HTTPD_SSI_INCLUDE_TAG      0
 
 #endif /* __LWIPOPTS_H__ */
