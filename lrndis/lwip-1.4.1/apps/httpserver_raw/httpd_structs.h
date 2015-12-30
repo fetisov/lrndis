@@ -56,7 +56,9 @@ static const char * const g_psHTTPHeaderStrings[] =
  "Connection: Close\r\n",
  "Connection: keep-alive\r\n",
  "Server: "HTTPD_SERVER_AGENT"\r\n",
- "\r\n<html><body><h2>404: The requested file cannot be found.</h2></body></html>\r\n"
+ "\r\n<html><body><h2>404: The requested file cannot be found.</h2></body></html>\r\n",
+
+ "Content-type: image/svg+xml\r\n\r\n"
 };
 
 /* Indexes into the g_psHTTPHeaderStrings array */
@@ -88,6 +90,10 @@ static const char * const g_psHTTPHeaderStrings[] =
 #define HTTP_HDR_SERVER         25 /* Server: HTTPD_SERVER_AGENT */
 #define DEFAULT_404_HTML        26 /* default 404 body */
 
+/* added by FSE: */
+#define HTTP_HDR_SVG            27  /* image/svg+xml */
+
+
 /** A list of extension-to-HTTP header strings */
 const static tHTTPHeader g_psHTTPHeaders[] =
 {
@@ -108,7 +114,8 @@ const static tHTTPHeader g_psHTTPHeaders[] =
  { "css",  HTTP_HDR_CSS},
  { "swf",  HTTP_HDR_SWF},
  { "xml",  HTTP_HDR_XML},
- { "xsl",  HTTP_HDR_XML}
+ { "xsl",  HTTP_HDR_XML},
+ { "svg",  HTTP_HDR_SVG}
 };
 
 #define NUM_HTTP_HEADERS (sizeof(g_psHTTPHeaders) / sizeof(tHTTPHeader))
