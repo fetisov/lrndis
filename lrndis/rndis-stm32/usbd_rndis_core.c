@@ -663,7 +663,7 @@ bool rndis_can_send(void)
 bool rndis_send(const void *data, int size)
 {
 	if (size <= 0 ||
-		size > ETH_MTU ||
+		size > ETH_MAX_PACKET_SIZE ||
 		rndis_tx_size > 0) return false;
 
 	__disable_irq();
