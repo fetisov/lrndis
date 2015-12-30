@@ -355,9 +355,9 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls>--c99 --gnu</MiscControls>
-              <Define>USE_STDPERIPH_DRIVER,STM32F4XX,USE_USB_OTG_FS</Define>
+              <Define>USE_STDPERIPH_DRIVER,STM32F4XX,USE_USB_OTG_FS,USE_DEFAULT_TIMEOUT_CALLBACK</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\project;..\..\cmsis;..\..\std-periph\inc;..\..\usb-core\dev-driver;..\..\usb-core\otg-driver;..\..\usb-files;..\..\usb-files\rndis;..\..\lrndis\lwip-1.4.1\src\include;..\..\lrndis\lwip-1.4.1\src\include\ipv4;..\..\lrndis\rndis-stm32;..\..\lrndis\dhcp-server;..\..\lrndis\dns-server;..\..\lrndis\http-server</IncludePath>
+              <IncludePath>..\..\project;..\..\cmsis;..\..\std-periph\inc;..\..\usb-core\dev-driver;..\..\usb-core\otg-driver;..\..\usb-files;..\..\usb-files\rndis;..\..\lrndis\lwip-1.4.1\src\include;..\..\lrndis\lwip-1.4.1\src\include\ipv4;..\..\lrndis\rndis-stm32;..\..\lrndis\dhcp-server;..\..\lrndis\dns-server;..\..\lrndis\lwip-1.4.1\apps\httpserver_raw</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -429,11 +429,6 @@
               <FilePath>..\..\project\startup_stm32f4xx.s</FilePath>
             </File>
             <File>
-              <FileName>resources.inc</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\project\resources.inc</FilePath>
-            </File>
-            <File>
               <FileName>time.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\project\time.c</FilePath>
@@ -442,6 +437,26 @@
               <FileName>time.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\project\time.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4_discovery.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\project\stm32f4_discovery.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4_discovery.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\project\stm32f4_discovery.h</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4_discovery_lis302dl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\project\stm32f4_discovery_lis302dl.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4_discovery_lis302dl.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\..\project\stm32f4_discovery_lis302dl.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -587,6 +602,11 @@
               <FileName>stm32f4xx_rtc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\std-periph\src\stm32f4xx_rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\std-periph\src\stm32f4xx_spi.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -814,34 +834,14 @@
           <GroupName>lrndis-http</GroupName>
           <Files>
             <File>
-              <FileName>cparser.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\lrndis\http-server\cparser.h</FilePath>
-            </File>
-            <File>
-              <FileName>htserv.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\lrndis\http-server\htserv.h</FilePath>
-            </File>
-            <File>
-              <FileName>http_req.c</FileName>
+              <FileName>fs.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\lrndis\http-server\http_req.c</FilePath>
+              <FilePath>..\..\lrndis\lwip-1.4.1\apps\httpserver_raw\fs.c</FilePath>
             </File>
             <File>
-              <FileName>http_req.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\..\lrndis\http-server\http_req.h</FilePath>
-            </File>
-            <File>
-              <FileName>cparser.c</FileName>
+              <FileName>httpd.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\..\lrndis\http-server\cparser.c</FilePath>
-            </File>
-            <File>
-              <FileName>htserv.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\lrndis\http-server\htserv.c</FilePath>
+              <FilePath>..\..\lrndis\lwip-1.4.1\apps\httpserver_raw\httpd.c</FilePath>
             </File>
           </Files>
         </Group>
