@@ -35,6 +35,8 @@
 #include "usbd_usr.h"
 #include "usbd_desc.h"
 #include "usb_conf.h"
+#include "stm32f4_discovery.h"
+#include "stm32f4_discovery_lis302dl.h"
 #include "netif/etharp.h"
 #include "lwip/init.h"
 #include "lwip/netif.h"
@@ -48,9 +50,8 @@
 #include "lwip/dns.h"
 #include "lwip/tcp_impl.h"
 #include "lwip/tcp.h"
-#include "http_req.h"
-#include "htserv.h"
 #include "time.h"
+#include "httpd.h"
 
 __ALIGN_BEGIN
 USB_OTG_CORE_HANDLE USB_OTG_dev
@@ -62,6 +63,12 @@ static uint8_t hwaddr[6]  = {0x20,0x89,0x84,0x6A,0x96,00};
 static uint8_t ipaddr[4]  = {192, 168, 7, 1};
 static uint8_t netmask[4] = {255, 255, 255, 0};
 static uint8_t gateway[4] = {0, 0, 0, 0};
+
+#define LED_ORANGE LED3
+#define LED_GREEN  LED4
+#define LED_RED    LED5
+#define LED_BLUE   LED6
+#define LINK_LED   LED_BLUE
 
 #define NUM_DHCP_ENTRY 3
 
@@ -89,7 +96,7 @@ uint32_t sys_now()
 	return (uint32_t)mtime();
 }
 
-static uint8_t received[ETH_MTU];
+static uint8_t received[ETH_MTU + 14];
 static int recvSize = 0;
 
 void on_packet(const char *data, int size)
@@ -98,19 +105,41 @@ void on_packet(const char *data, int size)
 	recvSize = size;
 }
 
-void usb_polling()
+TIMER_PROC(link_led_off, 50 * 1000, 1, NULL)
 {
-	if (recvSize == 0) return;
-	struct pbuf *frame;
-	frame = pbuf_alloc(PBUF_RAW, recvSize, PBUF_POOL);
-	if(frame == NULL) return;
-	memcpy(frame->payload, received, recvSize);
-	frame->len = recvSize;
-	ethernet_input(frame, &netif_data);
-	pbuf_free(frame);
-	recvSize = 0;
+	STM_EVAL_LEDOff(LINK_LED);
 }
 
+TIMER_PROC(tcp_timer, TCP_TMR_INTERVAL * 1000, 1, NULL)
+{
+	tcp_tmr();
+}
+
+void usb_polling()
+{
+	__disable_irq();
+	if (recvSize == 0) 
+	{
+		__enable_irq();
+		return;
+	}
+	struct pbuf *frame;
+	frame = pbuf_alloc(PBUF_RAW, recvSize, PBUF_POOL);
+	if (frame == NULL) 
+	{
+		__enable_irq();
+		return;
+	}
+	memcpy(frame->payload, received, recvSize);
+	frame->len = recvSize;
+	recvSize = 0;
+	__enable_irq();
+	ethernet_input(frame, &netif_data);
+	pbuf_free(frame);
+
+	STM_EVAL_LEDOn(LINK_LED);
+	stmr_run(&link_led_off);
+}
 
 static int outputs = 0;
 
@@ -122,18 +151,24 @@ err_t output_fn(struct netif *netif, struct pbuf *p, ip_addr_t *ipaddr)
 err_t linkoutput_fn(struct netif *netif, struct pbuf *p)
 {
 	int i;
-	if (p->len > ETH_MTU)
-		return ERR_ARG;
-	for (i = 0; i < 500; i++)
+	struct pbuf *q;
+	static char data[ETH_MTU + 14 + 4];
+	int size = 0;
+	for (i = 0; i < 200; i++)
 	{
 		if (rndis_can_send()) break;
 		msleep(1);
 	}
+  for(q = p; q != NULL; q = q->next)
+	{
+		if (size + q->len > ETH_MTU + 14)
+			return ERR_ARG;
+		memcpy(data + size, (char *)q->payload, q->len);
+		size += q->len;
+	}
 	if (!rndis_can_send())
 		return ERR_USE;
-	static char data[ETH_MTU];
-	memcpy(data, (char *)p->payload, p->len);
-	rndis_send(data, p->len);
+	rndis_send(data, size);
 	outputs++;
 	return ERR_OK;
 }
@@ -153,16 +188,6 @@ err_t netif_init_cb(struct netif *netif)
 
 #define PADDR(ptr) ((ip_addr_t *)ptr)
 
-TIMER_PROC(tcp_timer, TCP_TMR_INTERVAL * 1000, 1, NULL)
-{
-	tcp_tmr();
-}
-
-TIMER_PROC(http_timer, 100, 1, NULL)
-{
-	htserv_tmr(mtime());
-}
-
 void init_lwip()
 {
 	struct netif  *netif = &netif_data;
@@ -175,7 +200,7 @@ void init_lwip()
 	netif_set_default(netif);
 
 	stmr_add(&tcp_timer);
-	stmr_add(&http_timer);
+	stmr_add(&link_led_off);
 }
 
 void init_periph(void)
@@ -183,6 +208,21 @@ void init_periph(void)
 	time_init();
 	USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &usbd_rndis_cb, &USR_cb);
 	rndis_rxproc = on_packet;
+	STM_EVAL_PBInit(BUTTON_USER, BUTTON_MODE_GPIO);
+	STM_EVAL_LEDInit(LED_ORANGE);
+	STM_EVAL_LEDInit(LED_GREEN);
+	STM_EVAL_LEDInit(LED_RED);
+	STM_EVAL_LEDInit(LED_BLUE);
+
+	static LIS302DL_InitTypeDef	accInit =
+	{
+		LIS302DL_LOWPOWERMODE_ACTIVE,
+		LIS302DL_DATARATE_100,
+		LIS302DL_XYZ_ENABLE,
+		LIS302DL_FULLSCALE_2_3,
+		LIS302DL_SELFTEST_NORMAL
+	};
+	LIS302DL_Init(&accInit);
 }
 
 bool dns_query_proc(const char *name, ip_addr_t *addr)
@@ -195,63 +235,96 @@ bool dns_query_proc(const char *name, ip_addr_t *addr)
 	return false;
 }
 
-typedef struct my_page
+const char *state_cgi_handler(int index, int n_params, char *params[], char *values[])
 {
-	const char *uri;
-	int         code;
-	const char *mime;
-	const void *data;
-	int         size;
-} my_page_t;
-
-#include "resources.inc"
-
-static const my_page_t my_pages[] =
-{
-	{ "/",          200, MIME_TEXT_HTML, page1_html,     page1_html_size      },
-	{ "/page2.htm", 200, MIME_TEXT_HTML, page2_html,     page2_html_size      },
-	{ "/page3.htm", 200, MIME_TEXT_HTML, page3_html,     page3_html_size      },
-	{ "/check.gif", 200, MIME_IMAGE_GIF, check_png,      check_png_size       },
-	{ NULL,         404, MIME_TEXT_HTML, page_not_found, page_not_found_size  }
-};
-
-bool on_http_req(const http_req_t *req, http_resp_t *resp, void **arg)
-{
-	const my_page_t *page;
-	for (page = my_pages; page->uri != NULL; page++)
-		if (strcmp(page->uri, req->uri) == 0) break;
-	resp->code = page->code;
-	resp->cont_len = page->size;
-	resp->mime = page->mime;
-	resp->conn_type = CT_CLOSE;
-	*arg = (void *)page;
-	return true;
+	return "/state.shtml";
 }
 
-void http_write_data()
+bool led_g = false;
+bool led_o = false;
+bool led_r = false;
+
+const char *ctl_cgi_handler(int index, int n_params, char *params[], char *values[])
 {
-	for (int i = 0; i < HTTP_SERVER_MAX_CON; i++)
+	int i;
+	for (i = 0; i < n_params; i++)
 	{
-		int n;
-		const htcon_t *con;
-		my_page_t *page;
-		con = htcon(i);
-		if (con == NULL) continue;
-		page = (my_page_t *)con->arg;
-		if (con->state == CON_CLOSED)
-		{
-			htcon_free(i);
-			continue;
-		}
-		if (con->state != CON_ACTIVE) continue;
-		n = page->size - con->writed;
-		htcon_write(i, (char *)page->data + con->writed, n);
+		if (strcmp(params[i], "g") == 0) led_g = *values[i] == '1';
+		if (strcmp(params[i], "o") == 0) led_o = *values[i] == '1';
+		if (strcmp(params[i], "r") == 0) led_r = *values[i] == '1';
 	}
+
+	if (led_g)
+		STM_EVAL_LEDOn(LED_GREEN); else
+		STM_EVAL_LEDOff(LED_GREEN);
+	if (led_o)
+		STM_EVAL_LEDOn(LED_ORANGE); else
+		STM_EVAL_LEDOff(LED_ORANGE);
+	if (led_r)
+		STM_EVAL_LEDOn(LED_RED); else
+		STM_EVAL_LEDOff(LED_RED);
+
+	return "/state.shtml";
+}
+
+static const char *ssi_tags_table[] =
+{
+     "systick", // 0
+		 "btn",     // 1
+		 "acc",     // 2
+		 "ledg",    // 3
+		 "ledo",    // 4
+		 "ledr"     // 5
+};
+
+static const tCGI cgi_uri_table[] =
+{
+	{ "/state.cgi", state_cgi_handler },
+	{ "/ctl.cgi",   ctl_cgi_handler },
+};
+
+static u16_t ssi_handler(int index, char *insert, int ins_len)
+{
+	int res;
+
+	if (ins_len < 32) return 0;
+
+	switch (index)
+	{
+	case 0: // systick
+		res = snprintf(insert, ins_len, "%u", (unsigned)mtime());
+		break;
+	case 1: // btn
+		res = snprintf(insert, ins_len, "%i", STM_EVAL_PBGetState(BUTTON_USER) & 1);
+		break;
+	case 2: // acc
+	{
+		int32_t acc[3];
+		LIS302DL_ReadACC(acc);
+		res = snprintf(insert, ins_len, "%i, %i, %i", acc[0], acc[1], acc[2]);
+		break;
+	}
+	case 3: // ledg
+		*insert = '0' + (led_g & 1);
+		res = 1;
+		break;
+	case 4: // ledo
+		*insert = '0' + (led_o & 1);
+		res = 1;
+		break;
+	case 5: // ledr
+		*insert = '0' + (led_r & 1);
+		res = 1;
+		break;
+	}
+
+	return res;
 }
 
 int main(void)
 {
 	init_periph();
+
 	while (rndis_state != rndis_initialized) ;
 
 	init_lwip();
@@ -262,13 +335,13 @@ int main(void)
 
 	while (dnserv_init(PADDR(ipaddr), 53, dns_query_proc) != ERR_OK) ;
 
-	htserv_on_req = on_http_req;
-	while (htserv_init(80) != ERR_OK) ;
+	http_set_cgi_handlers(cgi_uri_table, sizeof(cgi_uri_table) / sizeof(tCGI));
+	http_set_ssi_handler(ssi_handler, ssi_tags_table, sizeof(ssi_tags_table) / sizeof(char *));
+	httpd_init();
 
 	while (1)
 	{
-		stmr();            // call software timers
 		usb_polling();     // usb device polling
-		http_write_data(); // writes http response
+		stmr();            // call software timers
 	}
 }

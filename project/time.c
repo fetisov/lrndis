@@ -76,25 +76,22 @@ void SysTick_Handler(void)
 
 int64_t utime(void)
 {
+	uint32_t ctrl;
 	static int64_t res;
-	register uint32_t ticks;
+	uint32_t ticks;
 
-	// „итаем значение счетчика SysTick->VAL и число 
-	// добавочных микросекунд usAddition.
-	// ѕоскольку во врем€ чтени€ может сработать прерывание
-	// перезагрузки таймера (увеличиваетс€ usAddition), 
-	// то делаем чтение в цикле. ”словие выхода из цикла -
-	// значение usAddition не изменилось.
+	ctrl = SysTick->CTRL;
 
-	do
-	{
-		res = usAddition;
-		ticks = SysTick->VAL;
-	} while (res != usAddition);
+read:
+	ticks = SysTick->VAL;
+	res = usAddition;
+	ctrl = SysTick->CTRL;
+	if (ctrl & SysTick_CTRL_COUNTFLAG_Msk)
+		goto read;
 
 	#define ticksPerUs (SystemCoreClock / 1000000)
 	res += 1000 - ticks / ticksPerUs;
-	#undef ticksPerUs
+	#undef usecPerTick
 
 	return res;
 }
