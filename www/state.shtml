@@ -1,0 +1,6 @@
+{
+	"systick": <!--#systick-->,
+	"button": <!--#btn-->,
+	"acc": [<!--#acc-->],
+	"leds": { "g": <!--#ledg-->, "o": <!--#ledo-->, "r": <!--#ledr--> }
+}

@@ -1,0 +1,116 @@
+<html>
+<head><title>Example</title>
+
+<style>
+.rdiv {
+	height: 200px;
+	width: 150px;
+	border-radius: 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+	border: 1px solid;
+	padding: 5px;
+	text-align: center;
+}
+</style>
+
+<script src="/zepto.min.js"></script>
+
+<script>
+
+var pollingError = false;
+
+function doUpdate(state)
+{
+	document.getElementById("devstate").innerHTML = '' + (pollingError ? '<font color="red">Link error</font>' : 'Connected');
+	document.getElementById("systick").innerHTML = '' + (state.systick / 1000) + ' seconds';
+	document.getElementById("ledg").checked = state.leds.g == 1;
+	document.getElementById("ledo").checked = state.leds.o == 1;
+	document.getElementById("ledr").checked = state.leds.r == 1;
+	document.getElementById("btn").innerHTML = 'state: ' + (state.button ? 'pressed' : 'not pressed');
+	
+	var s = 'acc x: ' + state.acc[0] + '<br>';
+	s = s + 'acc y: ' + state.acc[1] + '<br>';
+	s = s + 'acc z: ' + state.acc[2] + '<br>';
+	document.getElementById("acc").innerHTML = s;
+}
+
+var sendStateRequest = function ()
+{
+	$.ajax({
+		url: "/state.cgi",
+		timeout: 2000,
+		success: function(data)
+		{
+			setTimeout(sendStateRequest, 200);
+			pollingError = false;
+			doUpdate(data);
+		},
+		error: function(data)
+		{
+			setTimeout(sendStateRequest, 1000);
+			pollingError = true;
+			doUpdate(data);
+		},
+		dataType: "json"
+	});
+}
+
+function ctl(dataobj)
+{
+	$.ajax({
+		url: "/ctl.cgi",
+		data: dataobj,
+		success: function(data) { doUpdate(data); },
+		dataType: "json"
+	});
+}
+
+function docReady()
+{
+	sendStateRequest();
+}
+
+$(document).ready(docReady());
+
+</script> 
+
+</head>
+<body bgcolor="white" text="black">
+<center><table cellspacing="0">
+<tr>
+	<td>
+		<div class="rdiv">
+			<b>Accelerometer</b><br>
+			<div id="acc"></div><br>
+			<b>Push button</b><br>
+			<div id="btn"></div><br>
+		</div>
+	</td>
+	<td>
+<!--[if lte IE 9 ]>
+	Sorry, IE<9 browser<br>
+	does not support SVG
+<![endif]-->
+<!--[if !lte IE 9]> -->
+	<img height="400" src="./img/discovery.svg">
+<!-- <![endif]-->
+
+	</td>
+	<td>
+		<div class="rdiv">
+			<b>Device state</b><br>
+			<div id="devstate"></div><br>
+			<b>Device time</b><br>
+			<div id="systick"></div><br>
+			<b>User LEDs</b><br>
+			<input id="ledg" type="checkbox" onclick="ctl({g: (this.checked ? 1 : 0)})">green<br>
+			<input id="ledo" type="checkbox" onclick="ctl({o: (this.checked ? 1 : 0)})">orange<br>
+			<input id="ledr" type="checkbox" onclick="ctl({r: (this.checked ? 1 : 0)})">red<br>
+		</div>
+	</td>
+</tr>
+</table>
+</center>
+</body>
+</html>
