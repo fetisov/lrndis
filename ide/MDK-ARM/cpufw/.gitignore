@@ -1,0 +1,10 @@
+*.o
+*.crf
+*.d
+/ExtDll.iex
+/cpufw.axf
+/cpufw.build_log.htm
+/cpufw.htm
+/cpufw.lnp
+/cpufw.map
+/cpufw.sct
