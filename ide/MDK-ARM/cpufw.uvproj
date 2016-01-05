@@ -355,9 +355,9 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls>--c99 --gnu</MiscControls>
-              <Define>USE_STDPERIPH_DRIVER,STM32F4XX,USE_USB_OTG_FS,USE_DEFAULT_TIMEOUT_CALLBACK</Define>
+              <Define>USE_STDPERIPH_DRIVER,USE_USB_OTG_FS,USE_DEFAULT_TIMEOUT_CALLBACK</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\project;..\..\cmsis;..\..\std-periph\inc;..\..\usb-core\dev-driver;..\..\usb-core\otg-driver;..\..\usb-files;..\..\usb-files\rndis;..\..\lrndis\lwip-1.4.1\src\include;..\..\lrndis\lwip-1.4.1\src\include\ipv4;..\..\lrndis\rndis-stm32;..\..\lrndis\dhcp-server;..\..\lrndis\dns-server;..\..\lrndis\lwip-1.4.1\apps\httpserver_raw</IncludePath>
+              <IncludePath>..\..\project;..\..\cmsis;..\..\std-periph;..\..\std-periph\inc;..\..\usb-core\dev-driver;..\..\usb-core\otg-driver;..\..\usb-files;..\..\usb-files\rndis;..\..\lrndis\lwip-1.4.1\src\include;..\..\lrndis\lwip-1.4.1\src\include\ipv4;..\..\lrndis\rndis-stm32;..\..\lrndis\dhcp-server;..\..\lrndis\dns-server;..\..\lrndis\lwip-1.4.1\apps\httpserver_raw</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
