@@ -3,12 +3,14 @@
 
 <style>
 .rdiv {
-	height: 200px;
+	height: 240px;
 	width: 150px;
 	border-radius: 5px;
     -moz-border-radius: 5px 5px 5px 5px;
     -webkit-border-radius: 5px 5px 5px 5px;
 	border: 1px solid;
+	display: table-cell;
+	vertical-align: middle;
 	padding: 5px;
 	text-align: center;
 }
@@ -23,6 +25,8 @@ var pollingError = false;
 function doUpdate(state)
 {
 	document.getElementById("devstate").innerHTML = '' + (pollingError ? '<font color="red">Link error</font>' : 'Connected');
+	if (pollingError) return;
+
 	document.getElementById("systick").innerHTML = '' + (state.systick / 1000) + ' seconds';
 	document.getElementById("ledg").checked = state.leds.g == 1;
 	document.getElementById("ledo").checked = state.leds.o == 1;

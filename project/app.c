@@ -325,7 +325,7 @@ int main(void)
 {
 	init_periph();
 
-	while (rndis_state != rndis_initialized) ;
+	//while (rndis_state != rndis_initialized) ;
 
 	init_lwip();
 
