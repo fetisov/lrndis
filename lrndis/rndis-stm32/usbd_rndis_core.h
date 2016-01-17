@@ -23,7 +23,7 @@
  */
 
 /*
- * version: 1.0 demo (7.02.2015)
+ * version: 1.1 (17.01.2016)
  */
 
 #ifndef __USB_CDC_CORE_H_

@@ -1,4 +1,4 @@
-RNDIS driver for STM32F4-discovery example
+RNDIS driver for STM32F4-discovery example (ver 1.1)
 
 Demonstration video: http://www.youtube.com/watch?v=hsqWIqY8b6A
 
@@ -13,6 +13,7 @@ Author: Fetisov Sergey (fsenok@gmail.com)
 HEX-file for stm32f4-Discovery: github.com/fetisov/lrndis/blob/master/ide/MDK-ARM/cpufw/cpufw.hex
 
 See also:
+http://habrahabr.ru/post/274663
 http://habrahabr.ru/post/248097
 http://www.youtube.com/watch?v=W_o0lPivqsA
 
