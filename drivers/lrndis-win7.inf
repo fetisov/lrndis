@@ -1,0 +1,53 @@
+;
+; Remote NDIS template device setup file
+; Copyright (c) Microsoft Corporation
+;
+; This is the template for the INF installation script  for the RNDIS-over-USB
+; host driver that leverages the newer NDIS 6.x miniport (rndismp6.sys) for
+; improved performance. This INF works for Windows 7, Windows Server 2008 R2,
+; and later operating systems on x86, amd64 and ia64 platforms.
+; 
+; See:
+; https://msdn.microsoft.com/de-de/library/windows/hardware/Ff570620(v=VS.85).aspx
+;
+
+[Version]
+Signature    = "$Windows NT$"
+Class        = Net
+ClassGUID    = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider     = "Microsoft"
+DriverVer    = 07/21/2008,6.0.6000.16384
+;CatalogFile = device.cat
+
+[Manufacturer]
+%Manu%   = RNDISDevices,NTx86,NTamd64,NTia64
+
+[RNDISDevices.NTx86]
+%Device% = RNDIS.NT.6.0, USB\VID_0483&PID_0123
+
+[RNDISDevices.NTamd64]
+%Device% = RNDIS.NT.6.0, USB\VID_0483&PID_0123
+
+[RNDISDevices.NTia64]
+%Device% = RNDIS.NT.6.0, USB\VID_0483&PID_0123
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[RNDIS.NT.6.0]
+Characteristics    = 0x84  ; NCF_PHYSICAL + NCF_HAS_UI
+BusType            = 15
+include            = netrndis.inf
+needs              = usbrndis6.ndi
+*IfType            = 6     ; IF_TYPE_ETHERNET_CSMACD.
+*MediaType         = 16    ; NdisMediumNative802_11
+*PhysicalMediaType = 14    ; NdisPhysicalMedium802_3
+
+[RNDIS.NT.6.0.Services]
+include = netrndis.inf
+needs   = usbrndis6.ndi.Services
+
+[Strings]
+; Modify these strings for your device as needed.
+Manu   = "Manufacturer"
+Device = "STM32F4 USB Ethernet/RNDIS"
