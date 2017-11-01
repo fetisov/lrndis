@@ -403,10 +403,11 @@ void rndis_handle_set_msg(void  *pdev)
 		/* Parameters set up in 'Advanced' tab */
 		case OID_GEN_RNDIS_CONFIG_PARAMETER:
 			{
+                rndis_config_parameter_t *p;
 				char *ptr = (char *)m;
 				ptr += sizeof(rndis_generic_msg_t);
 				ptr += m->InformationBufferOffset;
-				rndis_config_parameter_t *p = (rndis_config_parameter_t *)ptr;
+				p = (rndis_config_parameter_t *)ptr;
 				rndis_handle_config_parm(ptr, p->ParameterNameOffset, p->ParameterValueOffset, p->ParameterNameLength, p->ParameterValueLength);
 			}
 			break;
@@ -517,7 +518,7 @@ static uint8_t usbd_rndis_ep0_recv(void  *pdev)
 
 int sended = 0;
 
-static inline uint8_t usbd_cdc_transfer(void *pdev)
+static __inline uint8_t usbd_cdc_transfer(void *pdev)
 {
 	if (sended != 0 || rndis_tx_ptr == NULL || rndis_tx_size <= 0) return USBD_OK;
 	if (rndis_first_tx)

@@ -39,9 +39,6 @@
 #include "lwip/udp.h"
 #include "netif/etharp.h"
 
-//#define DHCP_SERVER_PORT 67
-//#define DHCP_CLIENT_PORT 68
-
 typedef struct dhcp_entry
 {
 	uint8_t  mac[6];
@@ -63,4 +60,4 @@ typedef struct dhcp_config
 err_t dhserv_init(dhcp_config_t *config);
 void dhserv_free(void);
 
-#endif // DHSERVER_H
+#endif /* DHSERVER_H */

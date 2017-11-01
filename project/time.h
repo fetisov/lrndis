@@ -38,15 +38,15 @@
 extern "C" {
 #endif
 
-// general functions
+/* general functions */
 
-void    time_init(void);                 // time module initialization
-int64_t utime(void);                     // monotonic time with 1 us precision
-int64_t mtime(void);                     // monotonic time with 1 ms precision
-void    usleep(int us);                  // sleep to n us
-#define msleep(ms) usleep((ms) * 1000)   // sleep to n ms
+void    time_init(void);                 /* time module initialization */
+int64_t utime(void);                     /* monotonic time with 1 us precision */
+int64_t mtime(void);                     /* monotonic time with 1 ms precision */
+void    usleep(int us);                  /* sleep to n us */
+#define msleep(ms) usleep((ms) * 1000)   /* sleep to n ms */
 
-// softeare timer types
+/* softeare timer types */
 
 typedef struct stmr stmr_t;
 
@@ -56,22 +56,22 @@ typedef void (*stmr_cb_t)(stmr_t *tmr);
 
 struct stmr
 {
-	uint32_t  period; // timer period, us.
-	uint32_t  event;  // the last event, us
-	uint32_t  flags;  // STMR_XXX
-	void     *data;   // user data
-	stmr_cb_t proc;   // timer proc
-	stmr_t   *next;   // don't touch it
+	uint32_t  period; /* timer period, us. */
+	uint32_t  event;  /* the last event, us */
+	uint32_t  flags;  /* STMR_XXX */
+	void     *data;   /* user data */
+	stmr_cb_t proc;   /* timer proc */
+	stmr_t   *next;   /* don't touch it */
 };
 
-// softeare timer functions
+/* softeare timer functions */
 
-void stmr(void);             // call it periodically
-void stmr_init(stmr_t *tmr); // init timer and adds to list
-void stmr_add(stmr_t *tmr);  // adds timer to a timers list
-void stmr_free(stmr_t *tmr); // remove timer from the list
-void stmr_stop(stmr_t *tmr); // deactivate timer
-void stmr_run(stmr_t *tmr);  // activate timer
+void stmr(void);             /* call it periodically */
+void stmr_init(stmr_t *tmr); /* init timer and adds to list */
+void stmr_add(stmr_t *tmr);  /* adds timer to a timers list */
+void stmr_free(stmr_t *tmr); /* remove timer from the list */
+void stmr_stop(stmr_t *tmr); /* deactivate timer */
+void stmr_run(stmr_t *tmr);  /* activate timer */
 
 #define TIMER_PROC(name, period, active, data) \
 void name##_proc(stmr_t *tmr); \

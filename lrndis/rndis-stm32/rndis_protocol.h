@@ -302,6 +302,6 @@ typedef struct {
 	uint32_t		rxbad;
 } usb_eth_stat_t;
 
-#endif //_RNDIS_H
+#endif /* _RNDIS_H */
 
 /** @} */

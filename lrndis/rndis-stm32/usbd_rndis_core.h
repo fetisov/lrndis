@@ -38,7 +38,7 @@
 
 #define RNDIS_MTU        1500                           /* MTU value */
 #define RNDIS_LINK_SPEED 12000000                       /* Link baudrate (12Mbit/s for USB-FS) */
-#define RNDIS_VENDOR     "fetisov"                      // NIC vendor name
+#define RNDIS_VENDOR     "fetisov"                      /* NIC vendor name */
 #define RNDIS_HWADDR     0x20,0x89,0x84,0x6A,0x96,0xAB  /* MAC-address to set to host interface */
 
 typedef void (*rndis_rxproc_t)(const char *data, int size);

@@ -66,16 +66,16 @@ extern  uint8_t USBD_LangIDDesc[USB_SIZ_STRING_LANGID];
 
 __ALIGN_BEGIN uint8_t USBD_DeviceDesc[USB_SIZ_DEVICE_DESC] __ALIGN_END =
 {
-    18,                                 // bLength = 18 bytes.
-    USB_DEVICE_DESCRIPTOR_TYPE,         // bDescriptorType = DEVICE
-    0x00, 0x02,                         // bcdUSB          = 1.1 0x10,0x01  2.0 0x00,0x02
-    0xE0,                               // bDeviceClass    = Wireless Controller
-    0x00,                               // bDeviceSubClass = Unused at this time.
-    0x00,                               // bDeviceProtocol = Unused at this time.
-    0x40,                               // bMaxPacketSize0 = EP0 buffer size..
-    LOBYTE(USBD_VID), HIBYTE(USBD_VID), // Vendor ID
-    LOBYTE(USBD_PID), HIBYTE(USBD_PID), // Product ID
-    0xFF, 0xFF,                         // bcdDevice
+    18,                                 /* bLength = 18 bytes */
+    USB_DEVICE_DESCRIPTOR_TYPE,         /* bDescriptorType = DEVICE */
+    0x00, 0x02,                         /* bcdUSB          = 1.1 0x10,0x01  2.0 0x00,0x02 */
+    0xE0,                               /* bDeviceClass    = Wireless Controller */
+    0x00,                               /* bDeviceSubClass = Unused at this time */
+    0x00,                               /* bDeviceProtocol = Unused at this time */
+    0x40,                               /* bMaxPacketSize0 = EP0 buffer size */
+    LOBYTE(USBD_VID), HIBYTE(USBD_VID), /* Vendor ID */
+    LOBYTE(USBD_PID), HIBYTE(USBD_PID), /* Product ID */
+    0xFF, 0xFF,                         /* bcdDevice */
     USBD_IDX_MFC_STR,
     USBD_IDX_PRODUCT_STR,
     USBD_IDX_SERIAL_STR,

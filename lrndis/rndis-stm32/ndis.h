@@ -175,7 +175,7 @@ struct NDIS_PM_PACKET_PATTERN {
 #define OID_802_3_XMIT_LATE_COLLISIONS    0x01020207
 
 /* Wireless LAN OIDs */
-//Mandatory
+/* Mandatory */
 #define OID_802_11_BSSID                  0x0D010101 /* Q  S     */
 #define OID_802_11_SSID                   0x0D010102 /* Q  S     */
 #define OID_802_11_NETWORK_TYPE_IN_USE    0x0D010204 /* Q  S     */

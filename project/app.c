@@ -115,13 +115,13 @@ TIMER_PROC(tcp_timer, TCP_TMR_INTERVAL * 1000, 1, NULL)
 
 void usb_polling()
 {
+    struct pbuf *frame;
     __disable_irq();
     if (recvSize == 0) 
     {
         __enable_irq();
         return;
     }
-    struct pbuf *frame;
     frame = pbuf_alloc(PBUF_RAW, recvSize, PBUF_POOL);
     if (frame == NULL) 
     {
@@ -203,6 +203,15 @@ void init_lwip()
 
 void init_periph(void)
 {
+    static LIS302DL_InitTypeDef accInit =
+    {
+        LIS302DL_LOWPOWERMODE_ACTIVE,
+        LIS302DL_DATARATE_100,
+        LIS302DL_XYZ_ENABLE,
+        LIS302DL_FULLSCALE_2_3,
+        LIS302DL_SELFTEST_NORMAL
+    };
+
     time_init();
     USBD_Init(&USB_OTG_dev, USB_OTG_FS_CORE_ID, &USR_desc, &usbd_rndis_cb, &USR_cb);
     rndis_rxproc = on_packet;
@@ -211,15 +220,6 @@ void init_periph(void)
     STM_EVAL_LEDInit(LED_GREEN);
     STM_EVAL_LEDInit(LED_RED);
     STM_EVAL_LEDInit(LED_BLUE);
-
-    static LIS302DL_InitTypeDef    accInit =
-    {
-        LIS302DL_LOWPOWERMODE_ACTIVE,
-        LIS302DL_DATARATE_100,
-        LIS302DL_XYZ_ENABLE,
-        LIS302DL_FULLSCALE_2_3,
-        LIS302DL_SELFTEST_NORMAL
-    };
     LIS302DL_Init(&accInit);
 }
 

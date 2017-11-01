@@ -68,7 +68,7 @@ enum DHCP_OPTIONS
 	DHCP_DNSSEARCH              = 119, /* RFC 3397 */
 	DHCP_CSR                    = 121, /* RFC 3442 */
 	DHCP_MSCSR                  = 249, /* MS code for RFC 3442 */
-	DHCP_END                    = 255,
+	DHCP_END                    = 255
 };
 
 typedef struct
@@ -114,7 +114,7 @@ static dhcp_entry_t *entry_by_mac(uint8_t *mac)
 	return NULL;
 }
 
-static inline bool is_vacant(dhcp_entry_t *entry)
+static __inline bool is_vacant(dhcp_entry_t *entry)
 {
 	return memcmp("\0\0\0\0\0", entry->mac, 6) == 0;
 }
@@ -128,7 +128,7 @@ static dhcp_entry_t *vacant_address()
 	return NULL;
 }
 
-static inline void free_entry(dhcp_entry_t *entry)
+static __inline void free_entry(dhcp_entry_t *entry)
 {
 	memset(entry->mac, 0, 6);
 }
@@ -157,18 +157,18 @@ int fill_options(void *dest,
 	uint32_t subnet)
 {
 	uint8_t *ptr = (uint8_t *)dest;
-	// ACK message type
+	/* ACK message type */
 	*ptr++ = 53;
 	*ptr++ = 1;
 	*ptr++ = msg_type;
 
-	// dhcp server identifier
+	/* dhcp server identifier */
 	*ptr++ = DHCP_SERVERID;
 	*ptr++ = 4;
 	*(uint32_t *)ptr = serverid;
 	ptr += 4;
 
-	// lease time
+	/* lease time */
 	*ptr++ = DHCP_LEASETIME;
 	*ptr++ = 4;
 	*ptr++ = (lease_time >> 24) & 0xFF;
@@ -176,13 +176,13 @@ int fill_options(void *dest,
 	*ptr++ = (lease_time >> 8) & 0xFF;
 	*ptr++ = (lease_time >> 0) & 0xFF;
 
-	// subnet mask
+	/* subnet mask */
 	*ptr++ = DHCP_SUBNETMASK;
 	*ptr++ = 4;
 	*(uint32_t *)ptr = subnet;
 	ptr += 4;
 
-	// router
+	/* router */
 	if (router != 0)
 	{
 		*ptr++ = DHCP_ROUTER;
@@ -191,7 +191,7 @@ int fill_options(void *dest,
 		ptr += 4;
 	}
 
-	// domain name
+	/* domain name */
 	if (domain != NULL)
 	{
 		int len = strlen(domain);
@@ -201,7 +201,7 @@ int fill_options(void *dest,
 		ptr += len;
 	}
 
-	// domain name server (DNS)
+	/* domain name server (DNS) */
 	if (dns != 0)
 	{
 		*ptr++ = DHCP_DNSSERVER;
@@ -210,79 +210,9 @@ int fill_options(void *dest,
 		ptr += 4;
 	}
 
-	// end
+	/* end */
 	*ptr++ = DHCP_END;
 	return ptr - (uint8_t *)dest;
-
-///*
-//						// static route
-//						*option_ptr++ = DHCP_STATICROUTE;
-//						*option_ptr++ = 8;
-//						*option_ptr++ = ((uint8_t *)&server_ip)[0];
-//						*option_ptr++ = ((uint8_t *)&server_ip)[1];
-//						*option_ptr++ = ((uint8_t *)&server_ip)[2];
-//						*option_ptr++ = 0;
-//						memcpy(option_ptr, &server_ip, 4);
-//						option_ptr += 4;
-//*/
-
-///*
-//						*option_ptr++ = 0x2e; // NetBIOS over TCP/IP Node Type Option
-//						*option_ptr++ = 1;
-//						*option_ptr++ = 1;
-//						
-//						*option_ptr++ = 0x2c; // NetBIOS over TCP/IP Name Server Option
-//						*option_ptr++ = 4;
-//						memcpy(option_ptr, &server_ip, 4);
-//						option_ptr += 4;
-//*/
-
-//						/*
-//						*option_ptr++ = DHCP_MSCSR;
-//						*option_ptr++ = 8;
-//						*option_ptr++ = 24;
-//						*option_ptr++ = 192;
-//						*option_ptr++ = 168;
-//						*option_ptr++ = 0;
-//						*option_ptr++ = 192;
-//						*option_ptr++ = 168;
-//						*option_ptr++ = 0;
-//						*option_ptr++ = 11;
-//						*/
-
-//						// renewal time
-//						
-//						*option_ptr++ = DHCP_RENEWALTIME;
-//						*option_ptr++ = 4;
-//						*option_ptr++ = 0;
-//						*option_ptr++ = 0;
-//						*option_ptr++ = 0x38;
-//						*option_ptr++ = 0x40;
-//						
-//	
-//					// rebinding time
-//						
-//						*option_ptr++ = DHCP_REBINDTIME;
-//						*option_ptr++ = 4;
-//						*option_ptr++ = 0;
-//						*option_ptr++ = 0;
-//						*option_ptr++ = 0x62;
-//						*option_ptr++ = 0x70;
-//						
-///*
-//						// domain name
-//						*option_ptr++ = DHCP_DNSDOMAIN;
-//						int len = sprintf((char*)option_ptr+1, "stm32f4.net");
-//						*option_ptr = (len + 1);
-//						option_ptr += (len + 2);
-
-
-//						// Option: (31) Perform Router Discover
-//						*option_ptr++ = DHCP_PERFORMROUTERDISC;
-//						*option_ptr++ = 1;
-//						*option_ptr++ = 1;
-//*/
-						// end
 }
 
 static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
@@ -301,7 +231,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			if (entry == NULL) entry = vacant_address();
 			if (entry == NULL) break;
 
-			dhcp_data.dp_op = 2; // reply
+			dhcp_data.dp_op = 2; /* reply */
 			dhcp_data.dp_secs = 0;
 			dhcp_data.dp_flags = 0;
 			*(uint32_t *)dhcp_data.dp_yiaddr = *(uint32_t *)entry->addr;
@@ -326,29 +256,29 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			break;
 
 		case DHCP_REQUEST:
-			// 1. find requested ipaddr in option list
+			/* 1. find requested ipaddr in option list */
 			ptr = find_dhcp_option(dhcp_data.dp_options, sizeof(dhcp_data.dp_options), DHCP_IPADDRESS);
 			if (ptr == NULL) break;
 			if (ptr[1] != 4) break;
 			ptr += 2;
 
-			// 2. does hw-address registered?
+			/* 2. does hw-address registered? */
 			entry = entry_by_mac(dhcp_data.dp_chaddr);
 			if (entry != NULL) free_entry(entry);
 
-			// 3. find requested ipaddr
+			/* 3. find requested ipaddr */
 			entry = entry_by_ip(*(uint32_t *)ptr);
 			if (entry == NULL) break;
 			if (!is_vacant(entry)) break;
 
-			// 4. fill struct fields
+			/* 4. fill struct fields */
 			memcpy(dhcp_data.dp_yiaddr, ptr, 4);
-			dhcp_data.dp_op = 2; // reply
+			dhcp_data.dp_op = 2; /* reply */
 			dhcp_data.dp_secs = 0;
 			dhcp_data.dp_flags = 0;
 			memcpy(dhcp_data.dp_magic, magic_cookie, 4);
 
-			// 5. fill options
+			/* 5. fill options */
 			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
 
 			fill_options(dhcp_data.dp_options,
@@ -360,7 +290,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 				*(uint32_t *)config->addr, 
 				*(uint32_t *)entry->subnet);
 
-			// 6. send ACK
+			/* 6. send ACK */
 			pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
 			if (pp == NULL) break;
 			memcpy(entry->mac, dhcp_data.dp_chaddr, 6);

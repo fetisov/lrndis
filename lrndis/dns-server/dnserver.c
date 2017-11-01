@@ -38,23 +38,23 @@ dns_query_proc_t query_proc = NULL;
 typedef struct
 {
 #if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t rd: 1,     // Recursion Desired
-	        tc: 1,     // Truncation Flag
-	        aa: 1,     // Authoritative Answer Flag
-	        opcode: 4, // Operation code
-	        qr: 1;     // Query/Response Flag
-	uint8_t rcode: 4,  // Response Code
-	        z: 3,      // Zero
-	        ra: 1;     // Recursion Available
+	uint8_t rd: 1,     /* Recursion Desired */
+	        tc: 1,     /* Truncation Flag */
+	        aa: 1,     /* Authoritative Answer Flag */
+	        opcode: 4, /* Operation code */
+	        qr: 1;     /* Query/Response Flag */
+	uint8_t rcode: 4,  /* Response Code */
+	        z: 3,      /* Zero */
+	        ra: 1;     /* Recursion Available */
 #else
-	uint8_t qr: 1,     // Query/Response Flag
-	        opcode: 4, // Operation code
-	        aa: 1,     // Authoritative Answer Flag
-	        tc: 1,     // Truncation Flag
-	        rd: 1;     // Recursion Desired
-	uint8_t ra: 1,     // Recursion Available
-	        z: 3,      // Zero
-	        rcode: 4;  // Response Code
+	uint8_t qr: 1,     /* Query/Response Flag */
+	        opcode: 4, /* Operation code */
+	        aa: 1,     /* Authoritative Answer Flag */
+	        tc: 1,     /* Truncation Flag */
+	        rd: 1;     /* Recursion Desired */
+	uint8_t ra: 1,     /* Recursion Available */
+	        z: 3,      /* Zero */
+	        rcode: 4;  /* Response Code */
 #endif
 } dns_header_flags_t;
 
@@ -63,7 +63,6 @@ typedef struct
 	uint16_t id;
 	dns_header_flags_t flags;
 	uint16_t n_record[4];
-	uint8_t data[0];
 } dns_header_t;
 
 typedef struct dns_answer
@@ -138,7 +137,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 	if (header->flags.qr != 0) goto error;
 	if (ntohs(header->n_record[0]) != 1) goto error;
 
-	len = parse_next_query(header->data, p->len - sizeof(dns_header_t), &query);
+	len = parse_next_query(header + 1, p->len - sizeof(dns_header_t), &query);
 	if (len < 0) goto error;
 	if (!query_proc(query.name, &host_addr)) goto error;
 

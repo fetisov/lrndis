@@ -41,7 +41,7 @@ typedef signed     short   s16_t;
 typedef unsigned   long    u32_t;
 typedef signed     long    s32_t;
 typedef u32_t mem_ptr_t;
-//typedef int sys_prot_t;
+/* typedef int sys_prot_t; */
 
 
 
