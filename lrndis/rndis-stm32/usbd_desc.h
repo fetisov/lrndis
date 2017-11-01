@@ -32,8 +32,8 @@
 #include <stdint.h>
 #include "usbd_def.h"
 
-#define USBD_VID                        0x0483
-#define USBD_PID                        0x0123
+#define USBD_VID                        0x4E44
+#define USBD_PID                        0x4953
 #define USBD_LANGID_STRING              0x409
 #define USBD_MANUFACTURER_STRING        "Fetisov Sergey"
 #define USBD_PRODUCT_HS_STRING          "STM32F4 RNDIS"

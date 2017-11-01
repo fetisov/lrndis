@@ -23,7 +23,7 @@
  */
 
 /*
- * version: 1.1 (17.01.2016)
+ * version: 1.2 (01.11.2017)
  */
 
 #ifndef __USB_CDC_CORE_H_
@@ -34,14 +34,12 @@
 #include <string.h>
 #include <stddef.h>
 #include "usbd_ioreq.h"
-#include "usbd_rndis_core.h"
 #include "rndis_protocol.h"
 
-#define ETH_MTU          1500                           // MTU value
-#define ETH_LINK_SPEED   250000                         // bits per sec
+#define RNDIS_MTU        1500                           /* MTU value */
+#define RNDIS_LINK_SPEED 12000000                       /* Link baudrate (12Mbit/s for USB-FS) */
 #define RNDIS_VENDOR     "fetisov"                      // NIC vendor name
-#define STATION_HWADDR   0x20,0x89,0x84,0x6A,0x96,0xAA  // station MAC
-#define PERMANENT_HWADDR 0x20,0x89,0x84,0x6A,0x96,0xAA  // permanent MAC
+#define RNDIS_HWADDR     0x20,0x89,0x84,0x6A,0x96,0xAB  /* MAC-address to set to host interface */
 
 typedef void (*rndis_rxproc_t)(const char *data, int size);
 
