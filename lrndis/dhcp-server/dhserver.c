@@ -2,17 +2,17 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2015 by Sergey Fetisov <fsenok@gmail.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -73,28 +73,28 @@ enum DHCP_OPTIONS
 
 typedef struct
 {
-    uint8_t  dp_op;           /* packet opcode type */
-    uint8_t  dp_htype;        /* hardware addr type */
-    uint8_t  dp_hlen;         /* hardware addr length */
-    uint8_t  dp_hops;         /* gateway hops */
-    uint32_t dp_xid;          /* transaction ID */
-    uint16_t dp_secs;         /* seconds since boot began */
-    uint16_t dp_flags;
-    uint8_t  dp_ciaddr[4];    /* client IP address */
-    uint8_t  dp_yiaddr[4];    /* 'your' IP address */
-    uint8_t  dp_siaddr[4];    /* server IP address */
-    uint8_t  dp_giaddr[4];    /* gateway IP address */
-    uint8_t  dp_chaddr[16];   /* client hardware address */
-    uint8_t  dp_legacy[192];
-    uint8_t  dp_magic[4];     
-    uint8_t  dp_options[275]; /* options area */
+	uint8_t  dp_op;           /* packet opcode type */
+	uint8_t  dp_htype;        /* hardware addr type */
+	uint8_t  dp_hlen;         /* hardware addr length */
+	uint8_t  dp_hops;         /* gateway hops */
+	uint32_t dp_xid;          /* transaction ID */
+	uint16_t dp_secs;         /* seconds since boot began */
+	uint16_t dp_flags;
+	uint32_t dp_ciaddr;       /* client IP address */
+	uint32_t dp_yiaddr;       /* 'your' IP address */
+	uint32_t dp_siaddr;       /* server IP address */
+	uint32_t dp_giaddr;       /* gateway IP address */
+	uint8_t  dp_chaddr[16];   /* client hardware address */
+	uint8_t  dp_legacy[192];
+	uint32_t dp_magic;
+	uint8_t  dp_options[275]; /* options area */
 } DHCP_TYPE;
 
 DHCP_TYPE dhcp_data;
 static struct udp_pcb *pcb = NULL;
 static dhcp_config_t *config = NULL;
 
-char magic_cookie[] = {0x63,0x82,0x53,0x63};
+static const char magic_cookie[] = { 0x63, 0x82, 0x53, 0x63 };	/// @note ALIGN4
 
 static dhcp_entry_t *entry_by_ip(uint32_t ip)
 {
@@ -124,7 +124,7 @@ static dhcp_entry_t *vacant_address()
 	int i;
 	for (i = 0; i < config->num_entry; i++)
 		if (is_vacant(config->entries + i))
-			return config->entries + 1;
+			return &config->entries[i];		/// @note bug fixed
 	return NULL;
 }
 
@@ -220,6 +220,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 	uint8_t *ptr;
 	dhcp_entry_t *entry;
 	struct pbuf *pp;
+	uint8_t ack;	/// @note use NAK to clear Windows 10 infinite DHCP_REQUST hell mode
 
 	int n = p->len;
 	if (n > sizeof(dhcp_data)) n = sizeof(dhcp_data);
@@ -234,8 +235,8 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			dhcp_data.dp_op = 2; /* reply */
 			dhcp_data.dp_secs = 0;
 			dhcp_data.dp_flags = 0;
-			*(uint32_t *)dhcp_data.dp_yiaddr = *(uint32_t *)entry->addr;
-			memcpy(dhcp_data.dp_magic, magic_cookie, 4);
+			dhcp_data.dp_yiaddr = *(uint32_t*)entry->addr;
+			dhcp_data.dp_magic = *(uint32_t*)magic_cookie;
 
 			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
 
@@ -243,9 +244,9 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 				DHCP_OFFER,
 				config->domain,
 				*(uint32_t *)config->dns,
-				entry->lease, 
+				entry->lease,
 				*(uint32_t *)config->addr,
-				*(uint32_t *)config->addr, 
+				*(uint32_t *)config->addr,
 				*(uint32_t *)entry->subnet);
 
 			pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
@@ -256,38 +257,47 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			break;
 
 		case DHCP_REQUEST:
+			ack = DHCP_NAK;
+			dhcp_data.dp_yiaddr = 0;
+
 			/* 1. find requested ipaddr in option list */
 			ptr = find_dhcp_option(dhcp_data.dp_options, sizeof(dhcp_data.dp_options), DHCP_IPADDRESS);
-			if (ptr == NULL) break;
-			if (ptr[1] != 4) break;
+			if (ptr == NULL)
+				goto forward;
+			if (ptr[1] != 4)
+				goto forward;
 			ptr += 2;
+			memcpy(&dhcp_data.dp_yiaddr, ptr, 4);	/// @note defence for alignment glitch
 
 			/* 2. does hw-address registered? */
 			entry = entry_by_mac(dhcp_data.dp_chaddr);
 			if (entry != NULL) free_entry(entry);
 
 			/* 3. find requested ipaddr */
-			entry = entry_by_ip(*(uint32_t *)ptr);
-			if (entry == NULL) break;
-			if (!is_vacant(entry)) break;
+			entry = entry_by_ip(dhcp_data.dp_yiaddr);
+			if (entry == NULL)
+				goto forward;
+			if (!is_vacant(entry))
+				goto forward;
 
 			/* 4. fill struct fields */
-			memcpy(dhcp_data.dp_yiaddr, ptr, 4);
+			ack = DHCP_ACK;
+		forward:
 			dhcp_data.dp_op = 2; /* reply */
 			dhcp_data.dp_secs = 0;
 			dhcp_data.dp_flags = 0;
-			memcpy(dhcp_data.dp_magic, magic_cookie, 4);
+			dhcp_data.dp_magic = *(uint32_t*)magic_cookie;
 
 			/* 5. fill options */
 			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
 
 			fill_options(dhcp_data.dp_options,
-				DHCP_ACK,
+				ack,
 				config->domain,
 				*(uint32_t *)config->dns,
-				entry->lease, 
+				entry->lease,
 				*(uint32_t *)config->addr,
-				*(uint32_t *)config->addr, 
+				*(uint32_t *)config->addr,
 				*(uint32_t *)entry->subnet);
 
 			/* 6. send ACK */
