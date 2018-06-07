@@ -215,12 +215,11 @@ int fill_options(void *dest,
 	return ptr - (uint8_t *)dest;
 }
 
-static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struct ip_addr *addr, u16_t port)
+static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const struct ip4_addr *addr, u16_t port)
 {
 	uint8_t *ptr;
 	dhcp_entry_t *entry;
 	struct pbuf *pp;
-	uint8_t ack;	/// @note use NAK to clear Windows 10 infinite DHCP_REQUST hell mode
 
 	int n = p->len;
 	if (n > sizeof(dhcp_data)) n = sizeof(dhcp_data);
@@ -257,7 +256,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			break;
 
 		case DHCP_REQUEST:
-			ack = DHCP_NAK;
+			entry = NULL;	/// @note use NAK to clear Windows 10 infinite DHCP_REQUST hell mode
 			dhcp_data.dp_yiaddr = 0;
 
 			/* 1. find requested ipaddr in option list */
@@ -278,10 +277,9 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			if (entry == NULL)
 				goto forward;
 			if (!is_vacant(entry))
-				goto forward;
+				entry = NULL;
 
 			/* 4. fill struct fields */
-			ack = DHCP_ACK;
 		forward:
 			dhcp_data.dp_op = 2; /* reply */
 			dhcp_data.dp_secs = 0;
@@ -292,25 +290,26 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, struc
 			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
 
 			fill_options(dhcp_data.dp_options,
-				ack,
+				entry ? DHCP_ACK : DHCP_NAK,
 				config->domain,
 				*(uint32_t *)config->dns,
-				entry->lease,
+				entry ? entry->lease : 0,
 				*(uint32_t *)config->addr,
 				*(uint32_t *)config->addr,
-				*(uint32_t *)entry->subnet);
+				entry ? *(uint32_t*)entry->subnet : 0);
 
 			/* 6. send ACK */
 			pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
 			if (pp == NULL) break;
-			memcpy(entry->mac, dhcp_data.dp_chaddr, 6);
+			if (entry)
+				memcpy(entry->mac, dhcp_data.dp_chaddr, 6);
 			memcpy(pp->payload, &dhcp_data, sizeof(dhcp_data));
 			udp_sendto(upcb, pp, IP_ADDR_BROADCAST, port);
 			pbuf_free(pp);
 			break;
 
 		default:
-				break;
+			break;
 	}
 	pbuf_free(p);
 }
