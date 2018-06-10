@@ -114,6 +114,7 @@ static dhcp_entry_t *entry_by_mac(uint8_t *mac)
 	return NULL;
 }
 
+#ifndef USE_VNIC_PAIR
 static __inline bool is_vacant(dhcp_entry_t *entry)
 {
 	return memcmp("\0\0\0\0\0", entry->mac, 6) == 0;
@@ -132,6 +133,7 @@ static __inline void free_entry(dhcp_entry_t *entry)
 {
 	memset(entry->mac, 0, 6);
 }
+#endif	// USE_VNIC_PAIR
 
 uint8_t *find_dhcp_option(uint8_t *attrs, int size, uint8_t attr)
 {
@@ -228,7 +230,9 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const
 	{
 		case DHCP_DISCOVER:
 			entry = entry_by_mac(dhcp_data.dp_chaddr);
+#ifndef USE_VNIC_PAIR
 			if (entry == NULL) entry = vacant_address();
+#endif	// USE_VNIC_PAIR
 			if (entry == NULL) break;
 
 			dhcp_data.dp_op = 2; /* reply */
@@ -256,31 +260,31 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const
 			break;
 
 		case DHCP_REQUEST:
-			entry = NULL;	/// @note use NAK to clear Windows 10 infinite DHCP_REQUST hell mode
-			dhcp_data.dp_yiaddr = 0;
+			/* 1. does hw-address registered? */
+			entry = entry_by_mac(dhcp_data.dp_chaddr);
+#ifndef USE_VNIC_PAIR
+			if (entry != NULL) free_entry(entry);
+#else	// USE_VNIC_PAIR
+			if (entry == NULL)
+				break;
+#endif	// USE_VNIC_PAIR
 
-			/* 1. find requested ipaddr in option list */
+			/* 2. find requested ipaddr in option list */
 			ptr = find_dhcp_option(dhcp_data.dp_options, sizeof(dhcp_data.dp_options), DHCP_IPADDRESS);
-			if (ptr == NULL)
-				goto forward;
-			if (ptr[1] != 4)
-				goto forward;
+			if (ptr == NULL) break;
+			if (ptr[1] != 4) break;
 			ptr += 2;
 			memcpy(&dhcp_data.dp_yiaddr, ptr, 4);	/// @note defence for alignment glitch
 
-			/* 2. does hw-address registered? */
-			entry = entry_by_mac(dhcp_data.dp_chaddr);
-			if (entry != NULL) free_entry(entry);
-
 			/* 3. find requested ipaddr */
 			entry = entry_by_ip(dhcp_data.dp_yiaddr);
-			if (entry == NULL)
-				goto forward;
-			if (!is_vacant(entry))
-				entry = NULL;
+#ifndef USE_VNIC_PAIR
+			if (entry)
+				if (!is_vacant(entry))
+					entry = NULL;
+#endif	// USE_VNIC_PAIR
 
 			/* 4. fill struct fields */
-		forward:
 			dhcp_data.dp_op = 2; /* reply */
 			dhcp_data.dp_secs = 0;
 			dhcp_data.dp_flags = 0;
@@ -289,6 +293,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const
 			/* 5. fill options */
 			memset(dhcp_data.dp_options, 0, sizeof(dhcp_data.dp_options));
 
+			/// @note use NAK to clear Windows 10 infinite DHCP_REQUST hell mode
 			fill_options(dhcp_data.dp_options,
 				entry ? DHCP_ACK : DHCP_NAK,
 				config->domain,
@@ -301,8 +306,10 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const
 			/* 6. send ACK */
 			pp = pbuf_alloc(PBUF_TRANSPORT, sizeof(dhcp_data), PBUF_POOL);
 			if (pp == NULL) break;
+#ifndef USE_VNIC_PAIR
 			if (entry)
 				memcpy(entry->mac, dhcp_data.dp_chaddr, 6);
+#endif	// USE_VNIC_PAIR
 			memcpy(pp->payload, &dhcp_data, sizeof(dhcp_data));
 			udp_sendto(upcb, pp, IP_ADDR_BROADCAST, port);
 			pbuf_free(pp);
