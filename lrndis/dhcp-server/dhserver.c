@@ -212,6 +212,31 @@ int fill_options(void *dest,
 		ptr += 4;
 	}
 
+#ifdef DHCP_METRIC
+	// https://technet.microsoft.com/pt-pt/library/cc782411(v=ws.10).aspx
+	// https://support.microsoft.com/en-us/help/299540/an-explanation-of-the-automatic-metric-feature-for-ipv4-routes
+	*ptr++ = DHCP_VENDOR;	// vendor-specific information (RFC 2132)
+	*ptr++ = 16;
+
+	*ptr++ = DHCP_CLASSID;	// vendor class identifier
+	*ptr++ = 8;
+	*ptr++ = 'M';
+	*ptr++ = 'S';
+	*ptr++ = 'F';
+	*ptr++ = 'T';
+	*ptr++ = ' ';
+	*ptr++ = '5';
+	*ptr++ = '.';
+	*ptr++ = '0';
+
+	*ptr++ = DHCP_ROUTER;	// default router metric base
+	*ptr++ = 4;
+	*ptr++ = (uint8_t)(DHCP_METRIC >> 24);
+	*ptr++ = (uint8_t)(DHCP_METRIC >> 16);
+	*ptr++ = (uint8_t)(DHCP_METRIC >> 8);
+	*ptr++ = (uint8_t)DHCP_METRIC;
+#endif	// DHCP_METRIC
+
 	/* end */
 	*ptr++ = DHCP_END;
 	return ptr - (uint8_t *)dest;
@@ -274,7 +299,7 @@ static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const
 			if (ptr == NULL) break;
 			if (ptr[1] != 4) break;
 			ptr += 2;
-			memcpy(&dhcp_data.dp_yiaddr, ptr, 4);	/// @note defence for alignment glitch
+			dhcp_data.dp_yiaddr = *(uint32_t*)ptr;
 
 			/* 3. find requested ipaddr */
 			entry = entry_by_ip(dhcp_data.dp_yiaddr);
