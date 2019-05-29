@@ -124,7 +124,7 @@ static dhcp_entry_t *vacant_address()
 	int i;
 	for (i = 0; i < config->num_entry; i++)
 		if (is_vacant(config->entries + i))
-			return config->entries + 1;
+			return config->entries + i;
 	return NULL;
 }
 
