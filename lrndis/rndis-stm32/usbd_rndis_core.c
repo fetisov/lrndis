@@ -56,11 +56,29 @@ usb_eth_stat_t usb_eth_stat = { 0, 0, 0, 0 };
 uint32_t oid_packet_filter = 0x0000000;
 __ALIGN_BEGIN char rndis_rx_buffer[RNDIS_RX_BUFFER_SIZE] __ALIGN_END;
 __ALIGN_BEGIN uint8_t usb_rx_buffer[RNDIS_DATA_OUT_SZ] __ALIGN_END ;
+
+#define TX_STATE_READY           0 /* initial transmitter state */
+#define TX_STATE_NEED_SENDING    1 /* has user data to send */
+#define TX_STATE_SENDING_HDR     2 /* sending first packet with header */
+#define TX_STATE_SENDING_DATA    3 /* sending message data */
+#define TX_STATE_SENDING_PADDING 4 /* sending one byte padding */
+
+static struct
+{
+	uint8_t *ptr;
+	int size;
+	int state;
+	bool need_padding;
+} tx =
+{
+	NULL,
+	0,
+	TX_STATE_READY,
+	false
+};
+
 rndis_rxproc_t rndis_rxproc = NULL;
-uint8_t *rndis_tx_ptr = NULL;
-bool rndis_first_tx = true;
-int rndis_tx_size = 0;
-int rndis_sended = 0;
+
 rndis_state_t rndis_state;
 
 extern USB_OTG_CORE_HANDLE USB_OTG_dev;
@@ -516,50 +534,77 @@ static uint8_t usbd_rndis_ep0_recv(void  *pdev)
   return USBD_OK;
 }
 
-int sended = 0;
-
-static __inline uint8_t usbd_cdc_transfer(void *pdev)
-{
-	if (sended != 0 || rndis_tx_ptr == NULL || rndis_tx_size <= 0) return USBD_OK;
-	if (rndis_first_tx)
-	{
-		static uint8_t first[RNDIS_DATA_IN_SZ];
-		rndis_data_packet_t *hdr;
-
-		hdr = (rndis_data_packet_t *)first;
-		memset(hdr, 0, sizeof(rndis_data_packet_t));
-		hdr->MessageType = REMOTE_NDIS_PACKET_MSG;
-		hdr->MessageLength = sizeof(rndis_data_packet_t) + rndis_tx_size;
-		hdr->DataOffset = sizeof(rndis_data_packet_t) - offsetof(rndis_data_packet_t, DataOffset);
-		hdr->DataLength = rndis_tx_size;
-
-		sended = RNDIS_DATA_IN_SZ - sizeof(rndis_data_packet_t);
-		if (sended > rndis_tx_size) sended = rndis_tx_size;
-		memcpy(first + sizeof(rndis_data_packet_t), rndis_tx_ptr, sended);
-
-		DCD_EP_Tx(pdev, RNDIS_DATA_IN_EP, (uint8_t *)&first, sizeof(rndis_data_packet_t) + sended);
-	}
-	else
-	{
-		int n = rndis_tx_size;
-		if (n > RNDIS_DATA_IN_SZ) n = RNDIS_DATA_IN_SZ;
-		DCD_EP_Tx(pdev, RNDIS_DATA_IN_EP, rndis_tx_ptr, n);
-		sended = n;
-	}
-	return USBD_OK;
-}
-
 static uint8_t usbd_rndis_data_in(void *pdev, uint8_t epnum)
 {
 	epnum &= 0x0F;
 	if (epnum == (RNDIS_DATA_IN_EP & 0x0F))
 	{
-		rndis_first_tx = false;
-		rndis_sended += sended;
-		rndis_tx_size -= sended;
-		rndis_tx_ptr += sended;
-		sended = 0;
-		usbd_cdc_transfer(pdev);
+		if (tx.state == TX_STATE_NEED_SENDING)
+		{
+			static uint8_t first[RNDIS_DATA_IN_SZ];
+			rndis_data_packet_t *hdr;
+			int n;
+
+			hdr = (rndis_data_packet_t *)first;
+			memset(hdr, 0, sizeof(rndis_data_packet_t));
+			hdr->MessageType = REMOTE_NDIS_PACKET_MSG;
+			hdr->MessageLength = sizeof(rndis_data_packet_t) + tx.size;
+			hdr->DataOffset = sizeof(rndis_data_packet_t) - offsetof(rndis_data_packet_t, DataOffset);
+			hdr->DataLength = tx.size;
+
+			tx.need_padding = (hdr->MessageLength & (RNDIS_DATA_IN_SZ - 1)) == 0;
+			if (tx.need_padding)
+				hdr->MessageLength++;
+
+			n = RNDIS_DATA_IN_SZ - sizeof(rndis_data_packet_t);
+			if (n > tx.size) n = tx.size;
+			memcpy(first + sizeof(rndis_data_packet_t), tx.ptr, n);
+
+			tx.ptr += n;
+			tx.size -= n;
+
+			DCD_EP_Tx(pdev, RNDIS_DATA_IN_EP, (uint8_t *)&first, sizeof(rndis_data_packet_t) + n);
+
+			tx.state = TX_STATE_SENDING_HDR;
+
+			return USBD_OK;
+		}
+
+		if (tx.state == TX_STATE_SENDING_HDR)
+		{
+			if (tx.size > 0)
+			{
+				DCD_EP_Tx(pdev, RNDIS_DATA_IN_EP, tx.ptr, tx.size);
+				tx.state = TX_STATE_SENDING_DATA;
+				return USBD_OK;
+			}
+			if (tx.need_padding)
+			{
+				DCD_EP_Tx(pdev, RNDIS_DATA_IN_EP, (uint8_t *)"\0", 1);
+				tx.state = TX_STATE_SENDING_PADDING;
+				return USBD_OK;
+			}
+			tx.state = TX_STATE_READY;
+			return USBD_OK;
+		}
+
+		if (tx.state == TX_STATE_SENDING_DATA)
+		{
+			if (tx.need_padding)
+			{
+				DCD_EP_Tx(pdev, RNDIS_DATA_IN_EP, (uint8_t *)"\0", 1);
+				tx.state = TX_STATE_SENDING_PADDING;
+				return USBD_OK;
+			}
+			tx.state = TX_STATE_READY;
+			return USBD_OK;
+		}
+		
+		if (tx.state == TX_STATE_SENDING_PADDING)
+		{
+			tx.state = TX_STATE_READY;
+			return USBD_OK;
+		}
 	}
 	return USBD_OK;
 }
@@ -584,6 +629,8 @@ static void handle_packet(const char *data, int size)
 static uint8_t usbd_rndis_data_out(void *pdev, uint8_t epnum)
 {
 	static int rndis_received = 0;
+	static int rndis_MessageLength = 0;
+
 	if (epnum == RNDIS_DATA_OUT_EP)
 	{
 		PUSB_OTG_EP ep = &((USB_OTG_CORE_HANDLE*)pdev)->dev.out_ep[epnum];
@@ -596,9 +643,16 @@ static uint8_t usbd_rndis_data_out(void *pdev, uint8_t epnum)
 		{
 			if (rndis_received + ep->xfer_count <= RNDIS_RX_BUFFER_SIZE)
 			{
+				/* copy fragment into frame buffer */
 				memcpy(&rndis_rx_buffer[rndis_received], usb_rx_buffer, ep->xfer_count);
+
+				/* if first fragment, extract frame length */
+				if (rndis_received == 0)
+					rndis_MessageLength = ((rndis_data_packet_t *)rndis_rx_buffer)->MessageLength;
+
 				rndis_received += ep->xfer_count;
-				if (ep->xfer_count != RNDIS_DATA_OUT_SZ)
+
+				if (ep->xfer_count != RNDIS_DATA_OUT_SZ || rndis_received == rndis_MessageLength)
 				{
 					handle_packet(rndis_rx_buffer, rndis_received);
 					rndis_received = 0;
@@ -615,20 +669,21 @@ static uint8_t usbd_rndis_data_out(void *pdev, uint8_t epnum)
   return USBD_OK;
 }
 
-/* Start Of Frame event management */
 static uint8_t usbd_rndis_sof(void *pdev)
 {
-	return usbd_cdc_transfer(pdev);
+	(void)pdev;
+	return USBD_OK;
 }
 
 static uint8_t rndis_iso_in_incomplete(void *pdev)
 {
-	return usbd_cdc_transfer(pdev);
+	(void)pdev;
+	return USBD_OK;
 }
 
 static uint8_t rndis_iso_out_incomplete(void *pdev)
 {
-	DCD_EP_PrepareRx(pdev, RNDIS_DATA_OUT_EP, (uint8_t*)usb_rx_buffer, RNDIS_DATA_OUT_SZ);
+	(void)pdev;
 	return USBD_OK;
 }
 
@@ -642,20 +697,20 @@ static uint8_t *usbd_rndis_get_cfg(uint8_t speed, uint16_t *length)
 
 bool rndis_can_send(void)
 {
-	return rndis_tx_size <= 0;
+	return tx.state == TX_STATE_READY;
 }
 
 bool rndis_send(const void *data, int size)
 {
 	if (size <= 0 ||
 		size > ETH_MAX_PACKET_SIZE ||
-		rndis_tx_size > 0) return false;
+		tx.state != TX_STATE_READY) return false;
 
 	__disable_irq();
-	rndis_first_tx = true;
-	rndis_tx_ptr = (uint8_t *)data;
-	rndis_tx_size = size;
-	rndis_sended = 0;
+	tx.ptr = (uint8_t *)data;
+	tx.size = size;
+	tx.state = TX_STATE_NEED_SENDING;
+	usbd_rndis_data_in(&USB_OTG_dev, RNDIS_DATA_IN_EP);
 	__enable_irq();
 
 	return true;
